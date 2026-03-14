@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NoteFlowing — AI Meeting Notes from Any Audio</title>
+<meta name="description" content="Turn any meeting, interview or lecture into structured notes with AI. Transcription, speaker diarization, smart summary with action items. €15/month.">
+<meta property="og:title" content="NoteFlowing — AI Meeting Notes">
+<meta property="og:description" content="AI meeting notes from any audio. Transcription + diarization + summary. €15/month.">
+<meta property="og:type" content="website">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- v1.0.0 -->
+<style>
+:root {
+  --bg: #080810;
+  --surface: rgba(255,255,255,.04);
+  --surface2: rgba(255,255,255,.08);
+  --border: rgba(255,255,255,.08);
+  --accent: #7c6aff;
+  --accent2: #ff4d6d;
+  --accent3: #00d4aa;
+  --text: #f0f0f8;
+  --muted: #888;
+  --mono: 'Space Mono', monospace;
+  --sans: 'Inter', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 55% at 10% 10%, rgba(124,106,255,.12) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at 90% 85%, rgba(255,77,109,.08) 0%, transparent 60%);
+}
+body > * { position: relative; z-index: 1; }
+
+/* ── NAV ── */
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(8,8,16,.85);
+  backdrop-filter: blur(20px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo { font-family: var(--mono); font-weight: 700; font-size: 18px; }
+.logo span { color: var(--accent); }
+nav a {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 14px;
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  transition: all .2s;
+}
+nav a:hover { background: var(--accent); }
+
+/* ── HERO ── */
+.hero {
+  text-align: center;
+  padding: 80px 24px 60px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+.hero h1 {
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 20px;
+}
+.hero h1 em {
+  font-style: normal;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.hero p {
+  font-size: 18px;
+  color: var(--muted);
+  max-width: 560px;
+  margin: 0 auto 32px;
+}
+.cta {
+  display: inline-block;
+  padding: 14px 36px;
+  background: linear-gradient(135deg, var(--accent), #6c5ce7);
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: transform .2s, box-shadow .2s;
+}
+.cta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(124,106,255,.4); }
+.price-tag {
+  display: inline-block;
+  margin-left: 12px;
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--accent3);
+  border: 1px solid rgba(0,212,170,.3);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+/* ── WHO IS IT FOR ── */
+.audience {
+  max-width: 900px;
+  margin: 40px auto 60px;
+  padding: 0 24px;
+  text-align: center;
+}
+.audience h2 { font-size: 28px; margin-bottom: 32px; }
+.personas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
+.persona {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 12px;
+  text-align: center;
+}
+.persona-icon { font-size: 32px; margin-bottom: 8px; }
+.persona h4 { font-size: 13px; font-weight: 600; }
+.persona p { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ── COMPARISON ── */
+.compare {
+  max-width: 900px;
+  margin: 0 auto 60px;
+  padding: 0 24px;
+}
+.compare h2 {
+  text-align: center;
+  font-size: 28px;
+  margin-bottom: 32px;
+}
+.compare table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.compare th, .compare td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.compare th {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.compare td:first-child { font-weight: 600; }
+.compare .pro-col { color: var(--accent3); font-weight: 600; }
+.compare .price-row td { font-family: var(--mono); font-size: 16px; }
+.compare .price-row .pro-col { color: var(--accent3); font-size: 20px; }
+.check { color: var(--accent3); }
+.cross { color: #ff4d6d; opacity: .6; }
+
+/* ── FEATURES ── */
+.features {
+  max-width: 900px;
+  margin: 0 auto 60px;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+.feat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+}
+.feat-icon { font-size: 28px; margin-bottom: 12px; }
+.feat h3 { font-size: 16px; margin-bottom: 8px; }
+.feat p { font-size: 13px; color: var(--muted); }
+
+/* ── HOW IT WORKS ── */
+.how {
+  max-width: 700px;
+  margin: 0 auto 60px;
+  padding: 0 24px;
+  text-align: center;
+}
+.how h2 { font-size: 28px; margin-bottom: 32px; }
+.steps {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.step {
+  flex: 1;
+  min-width: 180px;
+  max-width: 200px;
+  text-align: center;
+}
+.step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-family: var(--mono);
+  margin-bottom: 12px;
+}
+.step h4 { font-size: 14px; margin-bottom: 6px; }
+.step p { font-size: 12px; color: var(--muted); }
+
+/* ── FOOTER ── */
+footer {
+  text-align: center;
+  padding: 32px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+@media (max-width: 600px) {
+  nav { padding: 12px 16px; }
+  .hero { padding: 48px 16px 40px; }
+  .compare th, .compare td { padding: 8px; font-size: 12px; }
+  .steps { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Note<span>Flowing</span></div>
+  <a href="index.html">Launch App</a>
+</nav>
+
+<section class="hero">
+  <h1>AI Meeting Notes from <em>Any Audio</em></h1>
+  <p>Drop a recording, get structured notes with speaker identification, key decisions, and action items. Powered by AI.</p>
+  <a href="https://se7en-tools.lemonsqueezy.com/checkout/buy/34f9e484-090f-411c-8dd0-d09cae5d74b9" class="cta">Start Free Trial</a>
+  <span class="price-tag">&#8364;15/mo &mdash; 14 days free</span>
+</section>
+
+<section class="audience">
+  <h2>Built for people who can't afford to miss a detail</h2>
+  <div class="personas">
+    <div class="persona">
+      <div class="persona-icon">&#x1F4BC;</div>
+      <h4>Freelancers</h4>
+      <p>Client calls & briefs</p>
+    </div>
+    <div class="persona">
+      <div class="persona-icon">&#x2696;</div>
+      <h4>Lawyers</h4>
+      <p>Depositions & hearings</p>
+    </div>
+    <div class="persona">
+      <div class="persona-icon">&#x1FA7A;</div>
+      <h4>Doctors</h4>
+      <p>Patient consultations</p>
+    </div>
+    <div class="persona">
+      <div class="persona-icon">&#x1F3A4;</div>
+      <h4>Journalists</h4>
+      <p>Interviews & press</p>
+    </div>
+    <div class="persona">
+      <div class="persona-icon">&#x1F393;</div>
+      <h4>Students</h4>
+      <p>Lectures & seminars</p>
+    </div>
+    <div class="persona">
+      <div class="persona-icon">&#x1F3AC;</div>
+      <h4>Creators</h4>
+      <p>Podcasts & collabs</p>
+    </div>
+  </div>
+</section>
+
+<section class="compare" id="pricing">
+  <h2>Why NoteFlowing?</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Otter.ai</th>
+        <th>Fireflies</th>
+        <th class="pro-col">NoteFlowing</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="price-row">
+        <td>Price</td>
+        <td>$16.99/mo</td>
+        <td>$18/mo</td>
+        <td class="pro-col">&#8364;15/mo</td>
+      </tr>
+      <tr>
+        <td>AI Transcription</td>
+        <td><span class="check">&#10003;</span></td>
+        <td><span class="check">&#10003;</span></td>
+        <td><span class="check">&#10003;</span> Whisper + Deepgram</td>
+      </tr>
+      <tr>
+        <td>Speaker Diarization</td>
+        <td><span class="check">&#10003;</span></td>
+        <td><span class="check">&#10003;</span></td>
+        <td><span class="check">&#10003;</span> Color-coded</td>
+      </tr>
+      <tr>
+        <td>AI Summary</td>
+        <td><span class="check">&#10003;</span></td>
+        <td><span class="check">&#10003;</span></td>
+        <td><span class="check">&#10003;</span> Multi-engine (Gemini, Claude, GPT)</td>
+      </tr>
+      <tr>
+        <td>Action Items</td>
+        <td><span class="check">&#10003;</span></td>
+        <td><span class="check">&#10003;</span></td>
+        <td><span class="check">&#10003;</span> With owner + deadline</td>
+      </tr>
+      <tr>
+        <td>Export PDF</td>
+        <td><span class="cross">&#10007;</span> Pro plan only</td>
+        <td><span class="cross">&#10007;</span> Business only</td>
+        <td><span class="check">&#10003;</span> Included</td>
+      </tr>
+      <tr>
+        <td>Export DOCX / MD / JSON</td>
+        <td><span class="cross">&#10007;</span></td>
+        <td><span class="check">&#10003;</span> Partial</td>
+        <td><span class="check">&#10003;</span> All formats</td>
+      </tr>
+      <tr>
+        <td>Choose AI Engine</td>
+        <td><span class="cross">&#10007;</span></td>
+        <td><span class="cross">&#10007;</span></td>
+        <td><span class="check">&#10003;</span> Gemini, Claude, Groq</td>
+      </tr>
+      <tr>
+        <td>Works Offline (PWA)</td>
+        <td><span class="cross">&#10007;</span></td>
+        <td><span class="cross">&#10007;</span></td>
+        <td><span class="check">&#10003;</span></td>
+      </tr>
+      <tr>
+        <td>Privacy</td>
+        <td>Cloud storage</td>
+        <td>Cloud storage</td>
+        <td class="pro-col">Client-side processing</td>
+      </tr>
+      <tr>
+        <td>Meeting bot required</td>
+        <td><span class="check">&#10003;</span> Yes</td>
+        <td><span class="check">&#10003;</span> Yes</td>
+        <td><span class="cross">&#10007;</span> No bot needed</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="features">
+  <div class="feat">
+    <div class="feat-icon">&#x1F9E0;</div>
+    <h3>Multi-Engine AI Summary</h3>
+    <p>Choose between Gemini, Claude, or Groq. Get structured notes with overview, key points, decisions, and follow-ups — tailored to your preferred tone.</p>
+  </div>
+  <div class="feat">
+    <div class="feat-icon">&#x1F465;</div>
+    <h3>Speaker Diarization</h3>
+    <p>Automatically identifies who said what. Color-coded speakers with customizable names. Powered by Deepgram Nova-2 for best accuracy.</p>
+  </div>
+  <div class="feat">
+    <div class="feat-icon">&#x2705;</div>
+    <h3>Action Items</h3>
+    <p>AI extracts action items with assigned owners and deadlines. Never miss a follow-up from your meetings again.</p>
+  </div>
+  <div class="feat">
+    <div class="feat-icon">&#x1F4E6;</div>
+    <h3>All Export Formats</h3>
+    <p>PDF, DOCX, Markdown, JSON, clipboard. Professional reports ready to share with your team in one click.</p>
+  </div>
+  <div class="feat">
+    <div class="feat-icon">&#x1F512;</div>
+    <h3>Privacy First</h3>
+    <p>Your audio is processed client-side. No cloud storage, no meeting bots joining your calls. Only audio is sent to AI APIs for transcription.</p>
+  </div>
+  <div class="feat">
+    <div class="feat-icon">&#x26A1;</div>
+    <h3>No Bot Required</h3>
+    <p>Unlike Otter or Fireflies, NoteFlowing doesn't need a bot in your meeting. Record locally, upload later. Works with any audio source.</p>
+  </div>
+</section>
+
+<section class="how">
+  <h2>How It Works</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h4>Upload Audio</h4>
+      <p>MP4, MKV, MP3, WAV, VTT, SRT &mdash; any format</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h4>AI Processes</h4>
+      <p>Transcription + diarization + summary in seconds</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h4>Export Notes</h4>
+      <p>PDF, DOCX, Markdown &mdash; share with your team</p>
+    </div>
+  </div>
+</section>
+
+<section class="hero" style="padding:40px 24px 60px">
+  <h2 style="font-size:28px;margin-bottom:16px">Ready to never miss a meeting detail?</h2>
+  <p style="margin-bottom:24px">Start with a 14-day free trial.</p>
+  <a href="https://se7en-tools.lemonsqueezy.com/checkout/buy/34f9e484-090f-411c-8dd0-d09cae5d74b9" class="cta" id="buyBtn">Start Free Trial</a>
+  <span class="price-tag">Then &#8364;15/mo</span>
+</section>
+
+<footer>
+  <p>NoteFlowing v1.3.0 &mdash; Built by <a href="https://nocode-flow.com">Se7en AI</a></p>
+  <p style="margin-top:8px">Questions? <a href="mailto:support@noteflowing.com">support@noteflowing.com</a></p>
+  <p style="margin-top:12px;font-size:13px;opacity:.7">Also try <a href="https://sub-whisper.com" style="color:#7c6aff">SubWhisper Pro</a> &mdash; AI subtitle translation in 75+ languages</p>
+  <p style="margin-top:4px;font-size:13px;opacity:.7">And <a href="https://t.me/VoiceBoxTranscBot" style="color:#00D4AA">VoiceBox</a> &mdash; AI voice transcription bot for Telegram</p>
+  <p id="visitCounter" style="margin-top:12px;font-size:12px;opacity:.5"></p>
+</footer>
+
+<script>
+(async()=>{
+  const GW='https://api-gateway-pro.quang101182.workers.dev';
+  const k='nf_visited';
+  try{
+    const method=sessionStorage.getItem(k)?'GET':'POST';
+    if(method==='POST') sessionStorage.setItem(k,'1');
+    const r=await fetch(GW+'/api/visit?page=nf',{method});
+    const d=await r.json();
+    if(d.total) document.getElementById('visitCounter').textContent=
+      d.total.toLocaleString()+' visitors';
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
