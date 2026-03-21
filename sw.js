@@ -24,6 +24,8 @@ self.addEventListener('activate', function(e) {
 });
 
 self.addEventListener('fetch', function(e) {
+  // Skip cross-origin requests (PostHog, analytics, APIs, fonts, etc.)
+  if (!e.request.url.startsWith(self.location.origin)) return;
   // Network-first for pages — always get latest version
   if (e.request.mode === 'navigate' || e.request.url.endsWith('index.html') || e.request.url.endsWith('prompts.js')) {
     e.respondWith(
@@ -37,6 +39,4 @@ self.addEventListener('fetch', function(e) {
     );
     return;
   }
-  // All other requests (APIs, CDN, fonts) → network only
-  e.respondWith(fetch(e.request));
 });
