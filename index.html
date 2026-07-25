@@ -1021,7 +1021,7 @@ async function generateSummary() {
       body = JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4096, messages: [{ role: 'user', content: fullPrompt }] });
     } else {
       endpoint = GW_URL + '/api/groq';
-      body = JSON.stringify({ model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: fullPrompt }], max_tokens: 4096 });
+      body = JSON.stringify({ model: 'qwen/qwen3.6-27b', reasoning_effort: 'none', messages: [{ role: 'user', content: fullPrompt }], max_tokens: 4096 });
     }
 
     const resp = await fetch(endpoint, {
