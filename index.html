@@ -1014,7 +1014,7 @@ async function generateSummary() {
   try {
     let endpoint, body;
     if (engine === 'gemini') {
-      endpoint = GW_URL + '/api/gemini/v1beta/models/gemini-2.0-flash:generateContent';
+      endpoint = GW_URL + '/api/gemini/v1beta/models/gemini-3.6-flash:generateContent';
       body = JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] });
     } else if (engine === 'claude') {
       endpoint = GW_URL + '/api/claude';
